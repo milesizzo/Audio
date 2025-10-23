@@ -55,6 +55,10 @@ public:
    */
   virtual void PlayFromFile(std::string audioFile, float volume = 1.0) = 0;
   /*
+   * @param buffer - pcm buffer, must be 16 bit signed little-endian, mono, 48000Hz
+   */
+  virtual void PlayPCM(uint8_t* array_buffer, int array_buffer_length) = 0;
+  /*
    * @param slot - player slot to get
    * @return whether there are audio playing for a specific player
    */
