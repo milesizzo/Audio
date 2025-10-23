@@ -128,7 +128,6 @@ SVCVoiceDataMessage FillVoiceMessage(std::vector<std::string> &buffers, CServerS
 void ProcessVoiceData(int slot, unsigned long id, std::string audioBuffer, std::string audioPath, std::function<void(SVCVoiceDataMessage)> const &callback, float volumeLevel = 1.0)
 {
   Message("Converting voice data to pcm...\n");
-  std::vector<std::string> opus_buffers;
   std::vector<uint8_t> buffer;
   // convert audio to s16be pcm (little endian), 48khz sample rate, 1 channel
   if (audioPath.size() == 0)
@@ -166,7 +165,12 @@ void ProcessVoiceData(int slot, unsigned long id, std::string audioBuffer, std::
       return;
     }
   }
+  ProcessPCMData(slot, id, buffer, callback);
+}
 
+void ProcessPCMData(int slot, unsigned long id, std::vector<uint8_t> buffer, std::function<void(SVCVoiceDataMessage)> const &callback)
+{
+  std::vector<std::string> opus_buffers;
   Message("Start playing\n");
   CallPlayStartListeners(slot);
   while (true)

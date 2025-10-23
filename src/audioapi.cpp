@@ -84,6 +84,24 @@ namespace api
     process.detach();
   }
 
+  void PlayPCM(uint8_t* array_buffer, int array_buffer_length)
+  {
+    if (g_GlobalAudioBuffer.size() > 0)
+    {
+      StopAllPlaying();
+    }
+    auto lambda = [](SVCVoiceDataMessage msgbuffer)
+    {
+      std::unique_lock<std::shared_mutex> lock(g_Mutex);
+      g_GlobalAudioBuffer.push_back(msgbuffer);
+    };
+    unsigned long timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    g_ProcessingThreads.Insert(-1, timestamp);
+    std::vector<uint8_t> buffer(array_buffer, array_buffer + array_buffer_length);
+    std::thread process(ProcessPCMData, -1, timestamp, buffer, lambda);
+    process.detach();
+  }
+
   void StopAllPlaying()
   {
     std::unique_lock<std::shared_mutex> lock(g_Mutex);
@@ -223,6 +241,10 @@ void CAudioInterface::PlayFromFile(std::string audioFile, float volume)
 {
   api::Play("", audioFile, volume);
 }
+void CAudioInterface::PlayPCM(uint8_t* array_buffer, int array_buffer_length)
+{
+  api::PlayPCM(array_buffer, array_buffer_length);
+}
 void CAudioInterface::StopAllPlaying()
 {
   api::StopAllPlaying();
@@ -299,6 +321,11 @@ extern "C"
     auto data2 = std::string(audioPath, audioPathSize);
 
     api::Play(data1, data2, volume);
+  }
+
+  void __cdecl NativePlayPCM(uint8_t* array_buffer, int array_buffer_length)
+  {
+    api::PlayPCM(array_buffer, array_buffer_length);
   }
 
   void __cdecl NativeStopAllPlaying()
